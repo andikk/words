@@ -3,24 +3,24 @@
     <h3>Если ты ошибся, то нажми на букву, чтобы удалить её</h3>
     <ul class="word">
       <li class="letter" v-for="(letter, index) in typedWord" @click="deleteLetter(index)">{{ letter }}</li>
-    </ul>	
+    </ul>
     <button @click="clear">Очистить</button>
   </div>
 
 </template>
 
 <script>
-  export default {
-  	methods: {
-  	  deleteLetter(index) {
-  	  	this.$emit('letterClicked', index); 
-  	  },
-      clear() {
-        this.$emit('clearClicked');
-      } 
-  	},
-    props: ['typedWord'] 
-  }
+export default {
+  methods: {
+    deleteLetter(index) {
+    	this.$emit('letterClicked', index);
+    },
+    clear() {
+      this.$emit('clearClicked');
+    },
+  },
+  props: ['typedWord'],
+};
 </script>
 
 <style scoped>
@@ -31,7 +31,7 @@
 
   .word {
     border: 2px solid #008000;
-    border-radius: 4px; 
+    border-radius: 4px;
     min-height: 50px;
   }
 
@@ -44,5 +44,5 @@
   .letter:hover {
     color: grey;
   }
- 
+
 </style>

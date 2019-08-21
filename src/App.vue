@@ -14,181 +14,177 @@
             <td>{{el.num}}</td><td>{{el.word}}</td><td>{{el.time}}</td>
           </tr>
         </table>
-      </div>    
+      </div>
     </app-modal>
     <app-displayed-word :displayedWord="displayedWord" @letterClicked="pasteLetter"></app-displayed-word>
-    <app-typed-word :typedWord="typedWord" @letterClicked="deleteLetter" @clearClicked="clear"></app-typed-word> 
+    <app-typed-word :typedWord="typedWord" @letterClicked="deleteLetter" @clearClicked="clear"></app-typed-word>
 
   </div>
 </template>
 
 <script>
-  import axios from 'axios';
-  import Modal from './components/Modal.vue';
-  import DisplayedWord from './components/DisplayedWord.vue';
-  import TypedWord from './components/TypedWord.vue'; 
+import axios from 'axios';
+import Modal from './components/Modal.vue';
+import DisplayedWord from './components/DisplayedWord.vue';
+import TypedWord from './components/TypedWord.vue';
 
-  export default {
-    data: function() {
-      return {
-        word: '',
-        typedWord: '',
-        displayedWord: '',
-        numbers: [],
-        words: [],
-        counter: 0,
-        timer: 1,
-        log: [],
-        gameStarted: false,
-        showModal: true,
-        message: 'Для начала игры нажми кнопку',
-        showButtons: false,
-        showStat: false,
-        sortParam: '',
-        tryNum: 0,
-        loading: true,
-      }
+export default {
+  data() {
+    return {
+      word: '',
+      typedWord: '',
+      displayedWord: '',
+      numbers: [],
+      words: [],
+      counter: 0,
+      timer: 1,
+      log: [],
+      gameStarted: false,
+      showModal: true,
+      message: 'Для начала игры нажми кнопку',
+      showButtons: false,
+      showStat: false,
+      sortParam: '',
+      tryNum: 0,
+      loading: true,
+    };
+  },
+  methods: {
+    clear() {
+      this.typedWord = '';
     },
-    methods: {
-      clear() {
+    showStatistics() {
+      this.showButtons = false;
+      this.showStat = true;
+      this.message = 'Для начала игры нажми кнопку';
+      this.gameStarted = false;
+    },
+    continueGame() {
+      this.showStat = false;
+      this.showModal = false;
+      this.selectWord();
+    },
+    pasteLetter(index) {
+      this.typedWord = this.typedWord + this.displayedWord[index];
+      this.check();
+    },
+    deleteLetter(index) {
+      const newStr = this.typedWord.split('');
+      newStr.splice(index, 1);
+      this.typedWord = newStr.join('');
+      this.check();
+    },
+    check() {
+      if (this.typedWord == this.word) {
         this.typedWord = '';
-      },
-      showStatistics () {
-        this.showButtons = false
-        this.showStat = true;
-        this.message = 'Для начала игры нажми кнопку';
-        this.gameStarted = false;
-      },
-      continueGame () {
+        this.message = 'Вы выиграли! Повторить?';
+        this.showButtons = true;
         this.showStat = false;
-        this.showModal = false;
-        this.selectWord();
-      },
-      pasteLetter(index) {
-        this.typedWord = this.typedWord + this.displayedWord[index]; 
-        this.check();
-      },
-      deleteLetter(index) {
-        const newStr = this.typedWord.split('');      
-        newStr.splice(index, 1);
-        this.typedWord = newStr.join('');
-        this.check();
-      },
-      check() {
-        if (this.typedWord == this.word) {
-          //console.log('Угадал');
-          this.typedWord = '',
-          this.message = "Вы выиграли! Повторить?";
-          this.showButtons = true;
-          this.showStat = false;
-          this.showModal = true;
-          this.tryNum++;
-          const stat = {
-            num: this.tryNum,
-            time: this.timer,
-            word: this.word
-          }
-          this.log.push(stat);
-          this.timer = 0;
-        } 
-      },
-      selectWord() {
-        const shuffleWord = (word) => {
-          let shuffledWord = '';
-          word = word.split('');
-          while (word.length > 0) {
-            shuffledWord +=  word.splice(word.length * Math.random() << 0, 1);
-          }
-          return shuffledWord;
+        this.showModal = true;
+        this.tryNum++;
+        const stat = {
+          num: this.tryNum,
+          time: this.timer,
+          word: this.word,
+        };
+        this.log.push(stat);
+        this.timer = 0;
+      }
+    },
+    selectWord() {
+      const shuffleWord = (word) => {
+        let shuffledWord = '';
+        word = word.split('');
+        while (word.length > 0) {
+          shuffledWord += word.splice(word.length * Math.random() << 0, 1);
         }
-          
-        if (this.counter < this.numbers.length) {
+        return shuffledWord;
+      };
 
-          const fileNum = this.numbers[this.counter];
-          
-          axios
-            .get('https://apidir.pfdo.ru/v1/directory-program-activities/' + fileNum)
-            .then(response => {
+      if (this.counter < this.numbers.length) {
+        const fileNum = this.numbers[this.counter];
 
-              if (response.data.result_message == 'Полный успех') {
-                if (this.words.some(elem => elem == response.data.data.name.toString()) == false) {
-                  this.words.push(response.data.data.name.toUpperCase());
+        axios
+          .get(`https://apidir.pfdo.ru/v1/directory-program-activities/${fileNum}`)
+          .then((response) => {
+            if (response.data.result_message == 'Полный успех') {
+              if (this.words.some(elem => elem == response.data.data.name.toString()) == false) {
+                this.words.push(response.data.data.name.toUpperCase());
 
-                  const wordToGuess =  response.data.data.name.split(' ').join('_');
-                  this.word = wordToGuess.toUpperCase();
-                  this.displayedWord = shuffleWord(wordToGuess.toUpperCase());
-                  console.log(this.word);
-                  setInterval(() => (this.timer++), 1000);
-                  this.loading = true;
-                }            
-                this.counter++;
-              } else {
-                this.counter++;
-                this.selectWord();
+                const wordToGuess = response.data.data.name.split(' ').join('_');
+                this.word = wordToGuess.toUpperCase();
+                this.displayedWord = shuffleWord(wordToGuess.toUpperCase());
+                console.log(this.word);
+                setInterval(() => (this.timer++), 1000);
+                this.loading = true;
               }
-                          
-            })
-            .catch(error => {
-              console.log(error);
-            })
-            .finally(() => (this.loading = false));
-        } else {
-          this.message = 'Вы отгадали все слова. Начните игру снова.';
-          this.showModal = true;
-          this.showButtons = false;
-          this.gameStarted = false;
-        }
-      },
-
-      startGame() {
-        this.numbers.length = 0; 
-        this.words.length = 0;
-        this.log.length = 0;
-        this.tryNum = 0;
-        this.gameStarted = true; 
-        this.showModal = false;
-
-        const shuffle = (array) => {
-          let currentIndex = array.length, temporaryValue, randomIndex ;
-          while (0 !== currentIndex) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
-          }
-          return array;
-        }
-
-        for (let i = 2; i < 180; i++) {
-          this.numbers.push(i);
-        }
-
-        shuffle(this.numbers);        
-        this.selectWord();
+              this.counter++;
+            } else {
+              this.counter++;
+              this.selectWord();
+            }
+          })
+          .catch((error) => {
+            console.log(error);
+          })
+          .finally(() => (this.loading = false));
+      } else {
+        this.message = 'Вы отгадали все слова. Начните игру снова.';
+        this.showModal = true;
+        this.showButtons = false;
+        this.gameStarted = false;
       }
     },
-    computed:{
-      sortedList () {
-        const sortByWord = (d1, d2) => {return (d1.word.toLowerCase() > d2.word.toLowerCase()) ? 1 : -1;};
-        const sortByTime = (d1, d2) => { return (d1.time > d2.time) ? 1 : -1; };
-        const sortByNum = (d1, d2) => { return (d1.num > d2.num) ? 1 : -1; };
 
-        switch(this.sortParam){
-          case 'num': return this.log.sort(sortByNum);
-          case 'word': return this.log.sort(sortByWord);
-          case 'time': return this.log.sort(sortByTime);
-          default: return this.log;
+    startGame() {
+      this.numbers.length = 0;
+      this.words.length = 0;
+      this.log.length = 0;
+      this.tryNum = 0;
+      this.gameStarted = true;
+      this.showModal = false;
+
+      const shuffle = (array) => {
+        let currentIndex = array.length; let temporaryValue; let
+          randomIndex;
+        while (currentIndex !== 0) {
+          randomIndex = Math.floor(Math.random() * currentIndex);
+          currentIndex -= 1;
+          temporaryValue = array[currentIndex];
+          array[currentIndex] = array[randomIndex];
+          array[randomIndex] = temporaryValue;
         }
+        return array;
+      };
+
+      for (let i = 2; i < 180; i++) {
+        this.numbers.push(i);
+      }
+
+      shuffle(this.numbers);
+      this.selectWord();
+    },
+  },
+  computed: {
+    sortedList() {
+      const sortByWord = (d1, d2) => ((d1.word.toLowerCase() > d2.word.toLowerCase()) ? 1 : -1);
+      const sortByTime = (d1, d2) => ((d1.time > d2.time) ? 1 : -1);
+      const sortByNum = (d1, d2) => ((d1.num > d2.num) ? 1 : -1);
+
+      switch (this.sortParam) {
+        case 'num': return this.log.sort(sortByNum);
+        case 'word': return this.log.sort(sortByWord);
+        case 'time': return this.log.sort(sortByTime);
+        default: return this.log;
       }
     },
-    components: {
-      appModal: Modal,
-      appDisplayedWord: DisplayedWord,
-      appTypedWord: TypedWord
-    }
-  }
-
+  },
+  components: {
+    appModal: Modal,
+    appDisplayedWord: DisplayedWord,
+    appTypedWord: TypedWord,
+  },
+};
 </script>
 
 <style>
@@ -250,7 +246,7 @@
 
 .overlay {
   overflow-y: hidden;
-} 
+}
 
 .overlay::before {
   position: absolute;

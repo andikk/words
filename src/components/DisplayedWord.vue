@@ -1,21 +1,21 @@
 <template>
   <div class="disp-word-container">
     <h2 class="title">Нажимай на буквы, чтобы составить из них слово</h2>
-  	<ul class="word">
+    <ul class="word">
       <li class="letter" v-for="(letter, index) in displayedWord" @click="pasteLetter(index)">{{ letter }}</li>
     </ul>
   </div>
 </template>
 
 <script>
-  export default {
+export default {
   	methods: {
   	  pasteLetter(index) {
-  	  	this.$emit('letterClicked', index); 
-  	  } 
+  	  	this.$emit('letterClicked', index);
+  	  },
   	},
-    props: ['displayedWord']
-  }
+  props: ['displayedWord'],
+};
 </script>
 
 <style scoped>
@@ -37,6 +37,6 @@
   .letter:hover {
     color: #fff;
     background-color: #008000;
-    transform: scale(1.1);   
+    transform: scale(1.1);
   }
 </style>
