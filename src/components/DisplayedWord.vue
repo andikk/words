@@ -32,6 +32,8 @@ export default {
     margin-bottom: 8px;
     border-radius: 4px;
     transition: all 0.3s;
+    cursor: pointer;
+    user-select: none;
   }
 
   .letter:hover {

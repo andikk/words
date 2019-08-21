@@ -39,6 +39,8 @@ export default {
     display: inline-block;
     font-size: 36px;
     position: relative;
+    cursor: pointer;
+    user-select: none;
   }
 
   .letter:hover {
